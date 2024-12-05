@@ -1,20 +1,20 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { SendIcon, Loader2, Copy } from 'lucide-react'
+import { SendIcon, Loader2, Copy, Paperclip, X } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Button } from "@/app/components/ui/button"
-import { Input } from "@/app/components/ui/input"
+import { Textarea } from "@/app/components/ui/textarea"
 import Sidebar from '@/app/components/sidebar'
 import { useChatContext } from '@/app/contexts/chat-context'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { useTheme } from "next-themes"
-import { Textarea } from "@/app/components/ui/textarea"
 
 type Message = {
   role: 'user' | 'ai'
   content: string
+  files?: File[]
 }
 
 interface ChatInterfaceProps {
@@ -27,7 +27,9 @@ export default function ChatInterface({ chatId, onLogout, token }: ChatInterface
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { addMessage, getMessages } = useChatContext()
 
   const messages = chatId ? getMessages(chatId) : []
@@ -39,22 +41,27 @@ export default function ChatInterface({ chatId, onLogout, token }: ChatInterface
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const trimmedInput = input.trim()
-    if (!trimmedInput || isLoading) return
+    if ((!trimmedInput && files.length === 0) || isLoading) return
 
-    const userMessage: Message = { role: 'user', content: trimmedInput }
+    const userMessage: Message = { role: 'user', content: trimmedInput, files }
     addMessage(chatId!, userMessage)
     setInput('')
+    setFiles([])
     setIsLoading(true)
     setError(null)
 
     try {
+      const formData = new FormData()
+      formData.append('message', trimmedInput)
+      formData.append('chatId', chatId || '')
+      files.forEach((file) => formData.append('files', file))
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ message: trimmedInput, chatId }),
+        body: formData,
       })
 
       if (!response.ok) {
@@ -73,6 +80,16 @@ export default function ChatInterface({ chatId, onLogout, token }: ChatInterface
     }
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFiles(Array.from(e.target.files))
+    }
+  }
+
+  const removeFile = (fileToRemove: File) => {
+    setFiles(files.filter(file => file !== fileToRemove))
+  }
+
   const renderMessage = (message: Message) => {
     const codeBlockRegex = /```(\w+)?\s*([\s\S]*?)```/g;
     const parts = [];
@@ -80,14 +97,12 @@ export default function ChatInterface({ chatId, onLogout, token }: ChatInterface
     let match;
 
     while ((match = codeBlockRegex.exec(message.content)) !== null) {
-      // Add text before code block
       if (match.index > lastIndex) {
         parts.push(
           <span key={lastIndex}>{message.content.slice(lastIndex, match.index)}</span>
         );
       }
 
-      // Add code block
       const language = match[1] || 'text';
       const code = match[2].trim();
       parts.push(
@@ -113,10 +128,22 @@ export default function ChatInterface({ chatId, onLogout, token }: ChatInterface
       lastIndex = match.index + match[0].length;
     }
 
-    // Add remaining text after last code block
     if (lastIndex < message.content.length) {
       parts.push(
         <span key={lastIndex}>{message.content.slice(lastIndex)}</span>
+      );
+    }
+
+    if (message.files && message.files.length > 0) {
+      parts.push(
+        <div key="files" className="mt-2">
+          <p className="text-sm font-semibold">Attachments:</p>
+          <ul className="list-disc list-inside">
+            {message.files.map((file, index) => (
+              <li key={index} className="text-sm">{file.name}</li>
+            ))}
+          </ul>
+        </div>
       );
     }
 
@@ -150,25 +177,60 @@ export default function ChatInterface({ chatId, onLogout, token }: ChatInterface
         </div>
         {error && <p className="text-red-500 p-2">{error}</p>}
         <form onSubmit={handleSubmit} className={`p-4 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
-          <div className="flex space-x-2">
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSubmit(e)
-                }
-              }}
-              placeholder="Type your message..."
-              disabled={isLoading}
-              className={`flex-grow resize-none ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}
-              rows={1}
-              style={{ minHeight: '2.5rem', maxHeight: '10rem' }}
-            />
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendIcon className="w-4 h-4" />}
-            </Button>
+          <div className="flex flex-col space-y-2">
+            {files.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {files.map((file, index) => (
+                  <div key={index} className="flex items-center bg-gray-200 rounded-full px-3 py-1">
+                    <span className="text-sm truncate max-w-xs">{file.name}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="ml-2 h-5 w-5"
+                      onClick={() => removeFile(file)}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex space-x-2">
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSubmit(e)
+                  }
+                }}
+                placeholder="Type your message..."
+                disabled={isLoading}
+                className={`flex-grow resize-none ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-black'}`}
+                rows={1}
+                style={{ minHeight: '2.5rem', maxHeight: '10rem' }}
+              />
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                multiple
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendIcon className="w-4 h-4" />}
+              </Button>
+            </div>
           </div>
         </form>
       </div>
