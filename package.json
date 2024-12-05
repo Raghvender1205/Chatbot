@@ -9,18 +9,42 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@huggingface/inference": "^2.8.1",
+    "@langchain/community": "^0.3.17",
+    "@langchain/core": "^0.3.20",
+    "@langchain/groq": "^0.1.2",
+    "@langchain/langgraph": "^0.2.24",
+    "@radix-ui/react-avatar": "^1.1.1",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-popover": "^1.1.2",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.1",
+    "@radix-ui/react-tabs": "^1.1.1",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "@types/uuid": "^10.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "langchain": "^0.3.6",
+    "lucide-react": "^0.468.0",
+    "next": "14.2.13",
+    "next-themes": "^0.4.3",
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.2.13"
+    "react-syntax-highlighter": "^15.6.1",
+    "tailwind-merge": "^2.5.5",
+    "tailwindcss-animate": "^1.0.7",
+    "uuid": "^11.0.3"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.13",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "eslint": "^8",
-    "eslint-config-next": "14.2.13"
+    "typescript": "^5"
   }
 }
