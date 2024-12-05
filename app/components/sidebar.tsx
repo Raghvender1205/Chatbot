@@ -17,7 +17,7 @@ export default function Sidebar({ onLogout }: SidebarProps) {
   const pathname = usePathname()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const { chatHistory, addChat } = useChatContext()
-  const [userProfile, setUserProfile] = useState({ firstName: '', lastName: '', email: '', role: '' })
+  const [userProfile, setUserProfile] = useState({ firstName: '', lastName: '', email: '', role: '', avatarUrl: '' })
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -68,26 +68,35 @@ export default function Sidebar({ onLogout }: SidebarProps) {
         <Popover open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
           <PopoverTrigger asChild>
             <Button variant="outline" className="w-full justify-start">
-              <User className="mr-2 h-4 w-4" />
+              <Avatar className="w-6 h-6 mr-2">
+                <AvatarImage src={userProfile.avatarUrl} alt={`${userProfile.firstName} ${userProfile.lastName}`} />
+                <AvatarFallback>{userProfile.firstName[0]}{userProfile.lastName[0]}</AvatarFallback>
+              </Avatar>
               {userProfile.firstName} {userProfile.lastName}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-56">
-            <div className="space-y-2">
-              <p className="text-sm font-medium">{userProfile.firstName} {userProfile.lastName}</p>
-              <p className="text-xs text-gray-500">{userProfile.email}</p>
-              <p className="text-xs text-gray-500">{userProfile.role}</p>
-              <Link href="/settings" className="block">
-                <Button variant="ghost" className="w-full justify-start">
-                  <User className="mr-2 h-4 w-4" />
-                  Settings
-                </Button>
-              </Link>
-              <Button variant="ghost" className="w-full justify-start" onClick={onLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Log out
-              </Button>
+            <div className="flex items-center space-x-2 mb-2">
+              <Avatar>
+                <AvatarImage src={userProfile.avatarUrl} alt={`${userProfile.firstName} ${userProfile.lastName}`} />
+                <AvatarFallback>{userProfile.firstName[0]}{userProfile.lastName[0]}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-sm font-medium">{userProfile.firstName} {userProfile.lastName}</p>
+                <p className="text-xs text-gray-500">{userProfile.email}</p>
+              </div>
             </div>
+            <p className="text-xs text-gray-500 mb-2">{userProfile.role}</p>
+            <Link href="/settings" className="block">
+              <Button variant="ghost" className="w-full justify-start">
+                <User className="mr-2 h-4 w-4" />
+                Settings
+              </Button>
+            </Link>
+            <Button variant="ghost" className="w-full justify-start" onClick={onLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Log out
+            </Button>
           </PopoverContent>
         </Popover>
       </div>

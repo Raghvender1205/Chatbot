@@ -10,12 +10,14 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Switch } from "@/app/components/ui/switch"
 import { useTheme } from "next-themes"
+import { Home } from 'lucide-react'
+import Link from 'next/link'
 
 export default function SettingsPage() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState('') // Add this line
+  const [role, setRole] = useState('')
   const router = useRouter()
 
   const fetchProfile = async () => {
@@ -29,7 +31,7 @@ export default function SettingsPage() {
       setFirstName(data.firstName)
       setLastName(data.lastName)
       setEmail(data.email)
-      setRole(data.role || 'Employee') // Add this line
+      setRole(data.role || 'Employee')
     } catch (error) {
       console.error('Error fetching profile:', error)
     }
@@ -47,7 +49,7 @@ export default function SettingsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ firstName, lastName, email, role }), // Include role
+        body: JSON.stringify({ firstName, lastName, email, role }),
       })
 
       if (!response.ok) {
@@ -56,7 +58,7 @@ export default function SettingsPage() {
 
       const result = await response.json()
       alert(result.message)
-      fetchProfile() // Fetch the updated profile
+      fetchProfile()
     } catch (error) {
       console.error('Error updating profile:', error)
       alert('Failed to update profile. Please try again.')
@@ -72,7 +74,15 @@ export default function SettingsPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Settings</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Settings</h1>
+        <Link href="/">
+          <Button variant="outline">
+            <Home className="mr-2 h-4 w-4" />
+            Back to Chat
+          </Button>
+        </Link>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-1">
           <UserProfileCard

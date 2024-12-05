@@ -5,11 +5,13 @@ import ChatInterface from '@/app/components/chat/chat-interface'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useChatContext } from '@/app/contexts/chat-context'
+import { Loader2 } from 'lucide-react'
 
 export default function ChatPage() {
   const params = useParams()
   const chatId = params.id as string
   const [token, setToken] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const { setCurrentChatId } = useChatContext()
 
@@ -21,6 +23,7 @@ export default function ChatPage() {
     } else {
       router.push('/')
     }
+    setIsLoading(false)
   }, [router, chatId, setCurrentChatId])
 
   const handleLogout = () => {
@@ -28,8 +31,16 @@ export default function ChatPage() {
     router.push('/')
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    )
+  }
+
   if (!token) {
-    return null // or a loading spinner
+    return null
   }
 
   return <ChatInterface chatId={chatId} onLogout={handleLogout} token={token} />
